@@ -63,9 +63,11 @@ func (p *IPForgeProvider) Configure(ctx context.Context, req provider.ConfigureR
 }
 
 func (p *IPForgeProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewSubnetResource,
+	}
 }
 
 func (p *IPForgeProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{}
 }
