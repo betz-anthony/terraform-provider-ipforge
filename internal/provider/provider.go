@@ -70,5 +70,7 @@ func (p *IPForgeProvider) Resources(_ context.Context) []func() resource.Resourc
 }
 
 func (p *IPForgeProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		NewSubnetDataSource, NewAddressDataSource,
+	}
 }
