@@ -119,4 +119,4 @@ tfplugindocs generate --provider-name ipforge
 
 ## License
 
-See the repository for license details.
+Mozilla Public License 2.0 (MPL-2.0) — see [LICENSE](LICENSE).
