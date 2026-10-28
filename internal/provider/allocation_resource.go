@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,6 +32,7 @@ type allocationModel struct {
 	RegisterDNS    types.Bool   `tfsdk:"register_dns"`
 	RegisterDHCP   types.Bool   `tfsdk:"register_dhcp"`
 	DNSZone        types.String `tfsdk:"dns_zone"`
+	Pool           types.String `tfsdk:"pool"`
 	Address        types.String `tfsdk:"address"`
 	Status         types.String `tfsdk:"status"`
 	DNSRegistered  types.Bool   `tfsdk:"dns_registered"`
@@ -54,6 +57,7 @@ func (r *allocationResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"register_dns":    schema.BoolAttribute{Optional: true, PlanModifiers: replaceB},
 			"register_dhcp":   schema.BoolAttribute{Optional: true, PlanModifiers: replaceB},
 			"dns_zone":        schema.StringAttribute{Optional: true, PlanModifiers: replaceS},
+			"pool":            schema.StringAttribute{Optional: true, PlanModifiers: replaceS, Description: "Name of an allocation pool (see `ipforge_subnet_pool`) to take the address from. Changing it forces a new allocation, since the existing address belongs to the old pool."},
 			"address":         schema.StringAttribute{Computed: true},
 			"status":          schema.StringAttribute{Computed: true},
 			"dns_registered":  schema.BoolAttribute{Computed: true},
@@ -82,10 +86,11 @@ func (r *allocationResource) Create(ctx context.Context, req resource.CreateRequ
 		RegisterDNS:  plan.RegisterDNS.ValueBool(),
 		RegisterDHCP: plan.RegisterDHCP.ValueBool(),
 		DNSZone:      plan.DNSZone.ValueString(),
+		Pool:         plan.Pool.ValueString(),
 	}
 	out, err := r.c.Allocate(plan.SubnetID.ValueInt64(), in)
 	if err != nil {
-		resp.Diagnostics.AddError("Allocate failed", err.Error())
+		resp.Diagnostics.AddError("Allocate failed", allocateErrorDetail(err, in.Pool))
 		return
 	}
 	plan.ID = types.Int64Value(out.ID)
@@ -150,4 +155,18 @@ func (r *allocationResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if err := r.c.DeleteAddress(id, keys); err != nil && !client.IsNotFound(err) {
 		resp.Diagnostics.AddError("Delete allocation failed", err.Error())
 	}
+}
+
+// allocateErrorDetail turns the pool-specific failures into actionable text.
+func allocateErrorDetail(err error, pool string) string {
+	var pe *client.PoolNotSupportedError
+	if errors.As(err, &pe) {
+		// State is not written, but the server already holds the address.
+		return fmt.Sprintf("%s. Release %s in IPForge before retrying.", pe.Error(), pe.Address)
+	}
+	var ae *client.APIError
+	if pool != "" && errors.As(err, &ae) && ae.Status == 409 {
+		return fmt.Sprintf("%s. If this hostname already holds an address outside pool %q, destroy and recreate the allocation or set `pool` back to its previous value.", err.Error(), pool)
+	}
+	return err.Error()
 }

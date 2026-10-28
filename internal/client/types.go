@@ -35,6 +35,8 @@ type AllocateRequest struct {
 	RegisterDHCP bool   `json:"register_dhcp"`
 	DNSZone      string `json:"dns_zone,omitempty"`
 	RegisterPTR  bool   `json:"register_ptr,omitempty"`
+	// Pool, when set, takes the address from that named allocation pool.
+	Pool string `json:"pool,omitempty"`
 }
 
 type AllocateResult struct {
@@ -49,6 +51,33 @@ type AllocateResult struct {
 	DHCPRegistered bool   `json:"dhcp_registered"`
 	PTRRegistered  bool   `json:"ptr_registered"`
 	IsNew          bool   `json:"is_new"`
+	// Pool is the allocation pool the address came from; servers that
+	// predate allocation pools never set it.
+	Pool string `json:"pool"`
+}
+
+// SubnetPool is a named IP window inside a subnet. Total/Used/Reserved/Free
+// are server-computed utilization and are only meaningful on reads.
+type SubnetPool struct {
+	ID          int64   `json:"id"`
+	SubnetID    int64   `json:"subnet_id"`
+	Name        string  `json:"name"`
+	StartIP     string  `json:"start_ip"`
+	EndIP       string  `json:"end_ip"`
+	Description *string `json:"description"`
+	Total       int64   `json:"total"`
+	Used        int64   `json:"used"`
+	Reserved    int64   `json:"reserved"`
+	Free        int64   `json:"free"`
+}
+
+// SubnetPoolInput is the create/replace body. The server replaces the whole
+// pool on update, so a nil Description clears it.
+type SubnetPoolInput struct {
+	Name        string  `json:"name"`
+	StartIP     string  `json:"start_ip"`
+	EndIP       string  `json:"end_ip"`
+	Description *string `json:"description"`
 }
 
 type Vlan struct {

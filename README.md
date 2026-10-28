@@ -81,6 +81,11 @@ output "web01_ip" {
 manage them as separate `ipforge_dns_record` / `ipforge_dhcp_reservation`
 resources.
 
+To split a subnet by workload, define named ranges with `ipforge_subnet_pool` and
+set `pool` on `ipforge_allocation`. Pools need an IPForge release that supports
+allocation pools; the provider fails the allocation instead of silently taking
+an address from the whole subnet when the server does not.
+
 ## Resources and data sources
 
 | Type                        | Kind        | Purpose                                          |
@@ -88,11 +93,13 @@ resources.
 | `ipforge_subnet`            | resource    | Subnet (CIDR, name, VLAN, parent, description).   |
 | `ipforge_address`           | resource    | A specific address within a subnet.               |
 | `ipforge_allocation`        | resource    | Claim the next free address by hostname.          |
+| `ipforge_subnet_pool`       | resource    | Named IP range inside a subnet, for pool allocation. |
 | `ipforge_vlan`              | resource    | VLAN definition.                                  |
 | `ipforge_dns_record`        | resource    | DNS record in a zone (all attributes ForceNew).   |
 | `ipforge_dhcp_reservation`  | resource    | Static DHCP reservation in a scope.               |
 | `ipforge_subnet`            | data source | Look up a subnet by CIDR or name.                 |
 | `ipforge_address`           | data source | Look up an address by IP.                         |
+| `ipforge_subnet_pool`       | data source | Look up a pool, with its used/free counts.        |
 
 See [`examples/`](./examples) for per-resource usage and a full end-to-end
 configuration.

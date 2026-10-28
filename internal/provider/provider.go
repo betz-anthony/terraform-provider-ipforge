@@ -66,11 +66,12 @@ func (p *IPForgeProvider) Resources(_ context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		NewSubnetResource, NewAddressResource, NewAllocationResource,
 		NewVlanResource, NewDNSRecordResource, NewDHCPReservationResource,
+		NewSubnetPoolResource,
 	}
 }
 
 func (p *IPForgeProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewSubnetDataSource, NewAddressDataSource,
+		NewSubnetDataSource, NewAddressDataSource, NewSubnetPoolDataSource,
 	}
 }

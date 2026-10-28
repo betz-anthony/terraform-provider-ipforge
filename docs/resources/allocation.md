@@ -45,6 +45,7 @@ output "web01_ip" {
 - `description` (String)
 - `dns_zone` (String)
 - `mac_address` (String)
+- `pool` (String) Name of an allocation pool (see `ipforge_subnet_pool`) to take the address from. Changing it forces a new allocation, since the existing address belongs to the old pool. Reference the pool's `name` attribute (for example `ipforge_subnet_pool.linux.name`) rather than typing the name, so Terraform creates the pool before allocating from it.
 - `register_dhcp` (Boolean)
 - `register_dns` (Boolean)
 
